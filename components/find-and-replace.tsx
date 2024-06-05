@@ -29,8 +29,8 @@ function replaceWithMarkdownStrong(
 ) {
   return text.replace(
     searchTerm,
-    // `<mark className="bg-purple-100">${replaceWith}</mark>`
-    replaceWith
+    `<mark className="bg-purple-100">${replaceWith}</mark>`
+    // replaceWith
   )
 }
 
@@ -209,13 +209,13 @@ Embark on this journey to become a more effective communicator, and discover the
         </div>
       </div>
       <div className="col-span-9 flex flex-col items-start">
-        <Card className="w-auto">
+        <Card className="w-auto dark:bg-white">
           <CardContent className="py-8">
             <Editor
               editorRef={editorRef}
               markdown={replaced}
               onChange={setInput}
-              className="prose prose-2xl break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
+              className="prose prose-2xl break-words  prose-p:leading-relaxed prose-pre:p-0"
             />
           </CardContent>
         </Card>
