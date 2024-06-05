@@ -6,96 +6,19 @@ import { useStreamableText } from '@/lib/hooks/use-streamable-text'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { generateReplacements } from '@/app/actions'
-import { generateAnnotatedTextMap } from '@/lib/generateAnnotatedText'
 import { Card, CardContent, CardHeader } from './ui/card'
 import importDynamic from 'next/dynamic'
 import { MDXEditorMethods } from '@mdxeditor/editor'
+import { applyPatches } from '@/lib/applyPatches'
 
 const Editor = importDynamic(() => import('./mdx-editor'), {
   // Make sure we turn SSR off
   ssr: false
 })
 
-import { AfterLine, compilePatches } from '@/lib/compilePatches'
-
 // Force the page to be dynamic and allow streaming responses up to 30 seconds
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
-
-function replaceWithMarkdownStrong(
-  text: string,
-  searchTerm: string,
-  replaceWith: string
-) {
-  return text.replace(
-    searchTerm,
-    `<mark className="bg-purple-100">${replaceWith}</mark>`
-    // replaceWith
-  )
-}
-
-const applyPatches = (text: string, replacements: string) => {
-  const patches = compilePatches(replacements)
-  const annotated = generateAnnotatedTextMap(text)
-
-  let result = ''
-  patches
-    .filter(
-      patch =>
-        patch.type === 'replace' ||
-        patch.type === 'deleteLine' ||
-        patch.type === 'deleteSentence'
-    )
-    .forEach(patch => {
-      if (patch.type === 'replace') {
-        const { lineIndex, sentenceIndex, pattern, replacementText } = patch
-        const sentence = annotated.get(lineIndex)?.get(sentenceIndex)
-
-        if (sentence) {
-          const nextText = replaceWithMarkdownStrong(
-            sentence,
-            pattern,
-            replacementText
-          )
-
-          annotated.get(lineIndex)!.set(sentenceIndex, nextText)
-        }
-      } else if (patch.type === 'deleteLine') {
-        annotated.delete(patch.lineIndex)
-      } else if (patch.type === 'deleteSentence') {
-        const line = annotated.get(patch.lineIndex)
-        line?.delete(patch.sentenceIndex)
-      }
-    })
-
-  const maxIndex = Math.max(...Array.from(annotated.keys()))
-
-  const lineAddPatches = patches.filter(
-    patch => patch.type === 'afterLine'
-  ) as AfterLine[]
-
-  let index = 1
-  while (index <= maxIndex) {
-    if (annotated.has(index)) {
-      const sentences = Array.from(annotated.get(index)!.values())
-      result += sentences.join(' ') + '\n'
-    } else {
-      result += '\n'
-    }
-
-    if (lineAddPatches.some(patch => patch.lineIndex === index)) {
-      const linePatch = lineAddPatches.filter(
-        patch => patch.lineIndex === index
-      )
-      linePatch.forEach(patch => {
-        result += patch!.text + '\n'
-      })
-    }
-    index += 1
-  }
-
-  return result
-}
 
 export function FindAndReplace() {
   const editorRef = useRef<MDXEditorMethods>(null)
@@ -147,17 +70,13 @@ Embark on this journey to become a more effective communicator, and discover the
     setResult(result)
   }
 
-  const text = useStreamableText(result)
-
-  const replaced = useMemo(() => {
-    return applyPatches(input, text)
-  }, [text, input])
+  const [isStreamingRef, patches] = useStreamableText(result)
 
   useEffect(() => {
-    if (replaced) {
-      editorRef.current?.setMarkdown(replaced)
+    if (patches && isStreamingRef.current) {
+      editorRef.current?.setMarkdown(applyPatches(input, patches))
     }
-  }, [replaced])
+  }, [patches, isStreamingRef, input])
 
   return (
     <div className="grid gap-4 grid-cols-12 p-12 w-full">
@@ -202,7 +121,7 @@ Embark on this journey to become a more effective communicator, and discover the
             <CardHeader>Patches</CardHeader>
             <CardContent>
               <div className="mt-4 flex flex-col gap-2 overflow-auto">
-                <pre className="text-xs">{text}</pre>
+                <pre className="text-xs">{patches}</pre>
               </div>
             </CardContent>
           </Card>
@@ -213,7 +132,7 @@ Embark on this journey to become a more effective communicator, and discover the
           <CardContent className="py-8">
             <Editor
               editorRef={editorRef}
-              markdown={replaced}
+              markdown={input}
               onChange={setInput}
               className="prose prose-2xl break-words  prose-p:leading-relaxed prose-pre:p-0"
             />
