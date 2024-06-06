@@ -23,13 +23,38 @@ Whenever we provide a text to an LLM and ask it to do some changes, it will alwa
 - [shadcn/ui](https://ui.shadcn.com)
 - Styling with [Tailwind CSS](https://tailwindcss.com)
 
-### How does it work?
+## How does it work?
 
 1. The user provides a text and a find-and-replace query.
 2. The text is split into lines and sentences.
 3. Each line and sentence is then prefixed with a identifier that looks like `<l1s1>` for line 1, sentence 1.
 4. The LLM is then asked to find-and-replace the query in each line and sentence.
 5. The changes are then streamed back to the user in the form of a diff. The diff looks like `<r:l1s1> string to find || string to replace`.
+
+## What this is not for
+
+- This is not for generating text from scratch.
+- This is not for summarizing text.
+- This is not for translating text.
+- This is not for sentiment analysis.
+- This is not for chat bots.
+- This is not a general purpose drop in replacement for how we use LLMs today.
+
+## What this is for
+
+- This is for finding and replacing text in a large text.
+- This is for patching text.
+- This is for editing text.
+- Use this as tooling for specific workflows that require find-and-replace functionality.
+  - For example, this can be used to patch code, documentation, or any other text that requires find-and-replace functionality.
+  - Find-and-replace can be used to fix typos, replace words, or even replace entire sentences.
+  - Anonymize text by replacing names with placeholders.
+  - Replace sensitive information with placeholders.
+  - Replace placeholders with actual values.
+  - Replace placeholders with code snippets.
+  - Replace placeholders with images.
+  - Replace placeholders with links.
+  - Replace words with SEO keywords.
 
 ## Running locally
 
