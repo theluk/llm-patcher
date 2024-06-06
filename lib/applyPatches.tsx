@@ -9,8 +9,8 @@ export function replaceWithMarkdownStrong(
 ) {
   return text.replace(
     searchTerm,
-    `<mark className="bg-purple-100">${replaceWith}</mark>`
-    // replaceWith
+    // `<mark className="bg-purple-100">${replaceWith}</mark>`
+    replaceWith
   )
 }
 
