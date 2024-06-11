@@ -2,7 +2,7 @@
 import { generateAnnotatedTextMap } from '@/lib/generateAnnotatedText'
 import { AfterLine, compilePatches } from '@/lib/compilePatches'
 
-export function replaceWithMarkdownStrong(
+export function replaceWithString(
   text: string,
   searchTerm: string,
   replaceWith: string
@@ -14,7 +14,22 @@ export function replaceWithMarkdownStrong(
   )
 }
 
-export const applyPatches = (text: string, replacements: string) => {
+function replaceWithMark(
+  text: string,
+  searchTerm: string,
+  replaceWith: string
+) {
+  return text.replace(
+    searchTerm,
+    `<mark className="bg-purple-100">${replaceWith}</mark>`
+  )
+}
+
+export const applyPatches = (
+  text: string,
+  replacements: string,
+  highlightEnabled = false
+) => {
   const patches = compilePatches(replacements)
   const annotated = generateAnnotatedTextMap(text)
 
@@ -32,11 +47,12 @@ export const applyPatches = (text: string, replacements: string) => {
         const sentence = annotated.get(lineIndex)?.get(sentenceIndex)
 
         if (sentence) {
-          const nextText = replaceWithMarkdownStrong(
-            sentence,
-            pattern,
-            replacementText
-          )
+          let nextText: string
+          if (highlightEnabled) {
+            nextText = replaceWithMark(sentence, pattern, replacementText)
+          } else {
+            nextText = replaceWithString(sentence, pattern, replacementText)
+          }
 
           annotated.get(lineIndex)!.set(sentenceIndex, nextText)
         }

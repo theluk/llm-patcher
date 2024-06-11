@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader } from './ui/card'
 import importDynamic from 'next/dynamic'
 import { MDXEditorMethods } from '@mdxeditor/editor'
 import { applyPatches } from '@/lib/applyPatches'
+import { Switch } from './ui/switch'
+import { Label } from './ui/label'
 
 const Editor = importDynamic(() => import('./mdx-editor'), {
   // Make sure we turn SSR off
@@ -22,6 +24,8 @@ export const maxDuration = 30
 
 export function FindAndReplace() {
   const editorRef = useRef<MDXEditorMethods>(null)
+
+  const [highlightEnabled, setHighlightEnabled] = useState(false)
 
   const [input, setInput] = useState(`
 # Introduction to Concise Communication
@@ -74,9 +78,11 @@ Embark on this journey to become a more effective communicator, and discover the
 
   useEffect(() => {
     if (patches && isStreamingRef.current) {
-      editorRef.current?.setMarkdown(applyPatches(input, patches))
+      editorRef.current?.setMarkdown(
+        applyPatches(input, patches, highlightEnabled)
+      )
     }
-  }, [patches, isStreamingRef, input])
+  }, [patches, isStreamingRef, input, highlightEnabled])
 
   return (
     <div className="grid gap-4 grid-cols-12 p-12 w-full">
@@ -84,6 +90,14 @@ Embark on this journey to become a more effective communicator, and discover the
         <div className="sticky top-24">
           <div className="rounded-lg bg-gray-300 p-4 dark:bg-gray-900">
             <div className="mt-4 flex flex-col gap-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="highlight-enabled"
+                  checked={highlightEnabled}
+                  onCheckedChange={setHighlightEnabled}
+                />
+                <Label htmlFor="highlight-enabled">Highlight Changes</Label>
+              </div>
               {[
                 'Fix grammar errors',
                 'Use keywords "concise and clear"',
